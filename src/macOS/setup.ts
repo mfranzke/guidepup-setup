@@ -7,9 +7,14 @@ import { disableSplashScreenSystemDefaults } from "./disableSplashScreenSystemDe
 import { disableDictationInputAutoEnable } from "./disableDictationInputAutoEnable";
 import { isSipEnabled } from "./isSipEnabled";
 import { writeDatabaseFile } from "./writeDatabaseFile";
-import { SYSTEM_PATH, USER_PATH, updateTccDb } from "./updateTccDb";
+import {
+  SYSTEM_PATH,
+  USER_PATH,
+  updateTccDb,
+  isOsaScriptPostEventWritten,
+} from "./updateTccDb";
 import { isAppleScriptControlEnabled } from "./isAppleScriptControlEnabled";
-import {handleInfo, handleWarning, logInfo} from "../logging";
+import { handleInfo, handleWarning, logInfo } from "../logging";
 import { ERR_MACOS_REQUIRES_MANUAL_USER_INTERACTION } from "../errors";
 import { enableDoNotDisturb } from "./enableDoNotDisturb";
 import { enabledDbFile } from "./isAppleScriptControlEnabled/enabledDbFile";
@@ -23,6 +28,14 @@ export async function setup(): Promise<void> {
     try {
       handleInfo("🆙 Update TCC.db for USER_PATH");
       updateTccDb(USER_PATH);
+
+      handleInfo("🤔 Check if OSA script post event is written for USER_PATH");
+      const isOsaAvailable = isOsaScriptPostEventWritten(USER_PATH);
+      handleInfo(
+        isOsaAvailable
+          ? "✅ OSA script post event is available"
+          : "❌ OSA script post event is not available",
+      );
     } catch (e) {
       if (isCi) {
         throw e;
@@ -34,12 +47,15 @@ export async function setup(): Promise<void> {
       updateTccDb(SYSTEM_PATH);
     } catch {
       // Swallow error - most CI don't allow system configuration
-      handleWarning("Update failed TCC.db for SYSTEM_PATH","most CI don't allow system configuration");
+      handleWarning(
+        "Update failed TCC.db for SYSTEM_PATH",
+        "most CI don't allow system configuration",
+      );
     }
   } else {
     handleWarning(
       "Ignoring TCC.db updates",
-      "If the necessary permissions have not been granted by other means, using this flag may result in your environment not being set up for reliable screen reader automation."
+      "If the necessary permissions have not been granted by other means, using this flag may result in your environment not being set up for reliable screen reader automation.",
     );
   }
 
@@ -48,7 +64,7 @@ export async function setup(): Promise<void> {
 
   const stopRecording = isRecorded
     ? macOSRecord(
-        `./recordings/macos-guidepup-setup-${osName}-${osVersion}-${+new Date()}.mov`
+        `./recordings/macos-guidepup-setup-${osName}-${osVersion}-${+new Date()}.mov`,
       )
     : () => null;
 
@@ -85,9 +101,9 @@ export async function setup(): Promise<void> {
       "Please complete remaining setup by following this guide:\n\n--> " +
         chalk.underline(
           chalk.bold(
-            "https://www.guidepup.dev/docs/guides/manual-voiceover-setup"
-          )
-        )
+            "https://www.guidepup.dev/docs/guides/manual-voiceover-setup",
+          ),
+        ),
     );
   } finally {
     stopRecording();

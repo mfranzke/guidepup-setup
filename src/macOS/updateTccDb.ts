@@ -249,3 +249,36 @@ export function updateTccDb(path: string): void {
     }
   }
 }
+
+
+/**
+ * Checks if the TCC entry for /usr/bin/osascript exists in the database.
+ * @param dbPath Path to the TCC.db
+ * @returns true if the entry exists, otherwise false
+ */
+export function isOsaScriptPostEventWritten(dbPath: string): boolean {
+  const query = `
+    SELECT COUNT(*) FROM access
+    WHERE
+      service='kTCCServicePostEvent'
+      AND client='/usr/bin/osascript'
+      AND allowed=1
+      AND prompt_count=3
+      AND csreq IS NULL
+      AND policy_id IS NULL
+      AND indirect_object_identifier=0
+      AND indirect_object_code_identity='UNUSED'
+      AND indirect_object_code_identity_type IS NULL
+      AND flags IS NULL
+      AND last_modified=${epoch}
+  `;
+  try {
+    const result = execSync(
+      `sqlite3 "${dbPath}" "${query.replace(/\n/g, " ")}"`,
+      { encoding: "utf8" }
+    ).trim();
+    return result === "1";
+  } catch {
+    return false;
+  }
+}
