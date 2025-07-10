@@ -21,6 +21,7 @@ const isRecorded = process.argv.includes("--record");
 export async function setup(): Promise<void> {
   if (!ignoreTccDb) {
     try {
+      handleInfo("🆙 Update TCC.db for USER_PATH");
       updateTccDb(USER_PATH);
     } catch (e) {
       if (isCi) {
@@ -29,9 +30,11 @@ export async function setup(): Promise<void> {
     }
 
     try {
+      handleInfo("🆙 Update TCC.db for SYSTEM_PATH");
       updateTccDb(SYSTEM_PATH);
     } catch {
       // Swallow error - most CI don't allow system configuration
+      handleWarning("Update failed TCC.db for SYSTEM_PATH","most CI don't allow system configuration");
     }
   } else {
     handleWarning(
